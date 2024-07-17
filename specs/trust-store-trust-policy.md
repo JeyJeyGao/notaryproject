@@ -84,6 +84,15 @@ Users who consume signed artifacts from OCI registries, or signed arbitrary blob
     - **`verifyTimestamp`**(*string*): An OPTIONAL property that specifies timestamp verification configuration. Supported values are `always` and `afterCertExpiry`. The default value is `always`, which means always verify timestamp countersignature. `afterCertExpiry` means only verify timestamp countersignature if at least one certificate in the signing certificate chain has expired at the time of verification.
   - **`trustStores`**(*array of string*): This REQUIRED property specifies a set of one or more named trust stores, each of which contain the trusted roots against which signatures are verified. Each named trust store uses the format `{trust-store-type}:{named-store}`. Currently supported values for `trust-store-type` are `ca`, `signingAuthority` and `tsa`. To enable timestamp verification, type `tsa` MUST be configured.
   - **`trustedIdentities`**(*array of strings*): This REQUIRED property specifies a set of identities that the user trusts. For X.509 PKI, it supports list of elements/attributes of the signing certificate's subject. For more information, see [identities constraints](#trusted-identities-constraints) section. A value `*` is supported if user trusts any identity (signing certificate) issued by the CA(s) in `trustStore`. This field only contains trusted identities issued by CA(s) or Signing Authorities. 
+- **`crlValidity`** (*integer*): This OPTIONAL property specifies the maximum validity duration in hours for the CRL cache. If the CRL validity (current time until `Next Update` time) is longer than `crlValidity`, `crlValidity` will be used to determine the next update time.
+- **`crlTimeout`** (*integer*): This OPTIONAL property specifies the timeout threshold for CRL download requests in seconds. The default value is 5.
+- **`defaultRevocationMode`** (*string*): This OPTIONAL property specifies the default revocation mode for each trust store. It supports `auto`, `ocsp`, and `crl`:
+  - **`auto`**: automatically falls back based on the [fallback rule](#certificate-revocation-evaluation)
+  - **`ocsp`**: only checks revocation with OCSP
+  - **`crl`**: only checks revocation with CRL
+- **`revocationMode`** (*object*): This OPTIONAL property specifies the revocation mode for each trust store.
+  - **`<store type>:<store name>`**: This OPTIONAL property specifies the revocation mode for each trust store per store type. It will override the `defaultRevocationMode`. It supports `auto`, `ocsp`, and `crl`. For example, {"ca:foo": "crl"}
+
   
 #### Blob Trust Policy
 
@@ -547,7 +556,7 @@ Starting from Root to leaf certificate, for each certificate in the certificate 
 
 #### CRLs
 
-There are two types of CRLs (per RFC 3280), Base CRLs and Delta CRls.
+There are two types of CRLs (per RFC 5280), Base CRLs and Delta CRls.
 
 - **Base CRLs:** Contains the revocation status of all certificates that have been issued by a given CA.
   BaseCRLs are signed by the certificate issuing CAs.
